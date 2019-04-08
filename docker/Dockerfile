@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
-ARG $VERSION
-ENV VERSION=$VERSION
+# ARG $VERSION
+ENV VERSION=2.2.0
 
 # Updates and Preqrequisites
 RUN apt-get -qq update \
