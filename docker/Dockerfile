@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-ARG VERSION
+ARG $VERSION
 ENV VERSION=$VERSION
 
 # Updates and Preqrequisites
