@@ -12,8 +12,8 @@ build:
   stage: build
   image: docker:stable
   script:
-    - docker build -t $IMAGE_TAG:${VERSION} ./docker
-    - docker build -t $IMAGE_TAG:${VERSION}-$CI_COMMIT_TAG ./docker
+    - docker build -t $IMAGE_TAG:${VERSION} .
+    - docker build -t $IMAGE_TAG:${VERSION}-$CI_COMMIT_TAG .
     - docker push $IMAGE_TAG:${VERSION}
     - docker push $IMAGE_TAG:${VERSION}-$CI_COMMIT_TAG
 
