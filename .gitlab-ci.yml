@@ -14,5 +14,6 @@ build:
   script:
     - docker build -t $IMAGE_TAG:${VERSION} .
     - docker push $IMAGE_TAG:${VERSION}
+    - docker tag $IMAGE_TAG:${VERSION} $IMAGE_TAG:latest
     - docker push $IMAGE_TAG:latest
 
