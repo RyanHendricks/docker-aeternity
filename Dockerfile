@@ -48,9 +48,19 @@ RUN bin/aeternity check_config aeternity.yaml
 # # Ensure we are in the correect directory
 # cd /aeternity/aeternity_source/_build/prod/rel/aeternity/
 
+# STOPSIGNAL SIGINT
+
+# COPY /scripts/start.sh /.aeternity/start.sh
+# RUN chmod u+x /.aeternity/start.sh
+
+COPY /scripts/start.sh /.aeternity/start.sh
+
+RUN chmod u+x /.aeternity/start.sh
+
 STOPSIGNAL SIGINT
 
-# COPY /scripts/entrypoint.sh /usr/local/bin
-# RUN chmod u+x /usr/local/bin/entrypoint.sh
-
-# CMD ["/bin/aeternity start"]
+ADD ./scripts /usr/local/bin
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["start.sh"]
+CMD [ "/.aeternity/start.sh" ]
+# ENTRYPOINT [ "start.sh" ]

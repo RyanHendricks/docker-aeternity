@@ -4,7 +4,7 @@ services:
   aeternity:
     container_name: aeternity
     build: .
-    environment:
-      - DATA_DIR=/.aeternity
-    env_file: env
+    # environment:
+    #   - DATA_DIR=/.aeternity
+    # env_file: env
     restart: unless-stopped
