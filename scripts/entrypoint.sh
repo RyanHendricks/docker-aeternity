@@ -1,6 +1,5 @@
-#!/bin/sh
-set -x
+#!/bin/bash
+set -e
 
-chown -R ${USERNAME} .
-
-exec su-exec ${USERNAME} "$@"
+# Using console with extra arguments because "foreground" does not handle SIGTERM/SIGQUIT
+exec ./bin/aeternity console -noshell -noinput $@

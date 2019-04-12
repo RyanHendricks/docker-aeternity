@@ -1,66 +1,56 @@
+FROM aeternity/builder as builder
+
+# This Dockerfile is was created by modifying the original
+# from the aeternity github repository in order to alter
+# the build process from `clone build deploy` to
+# `build clone deploy`
+
+# Down load source
+RUN mkdir /tmp/app/
+RUN git clone https://github.com/aeternity/aeternity.git /tmp/app
+
+WORKDIR /tmp/app
+
+RUN make prod-compile-deps
+RUN make prod-build
+
+# Put aeternity node in second stage container
 FROM ubuntu:18.04
 
-# ARG $VERSION
-ENV VERSION=2.2.0
+ENV USERNAME=aeternity
 
-# Updates and Preqrequisites
-RUN apt-get -qq update \
-  && apt-get -y upgrade \
-  && apt-get -qq -y install \
-      git \
-      curl \
-      autoconf \
-      build-essential \
-      ncurses-dev \
-      libssl-dev
+# Deploy application code from builder container
+COPY --from=builder /tmp/app/_build/prod/rel/aeternity /home/$USERNAME/node
+COPY --from=builder /tmp/app/docker/entrypoint.sh /entrypoint.sh
+COPY --from=builder /tmp/app/docker/healthcheck.sh /healthcheck.sh
+# OpenSSL is shared lib dependency
+RUN apt-get -qq update && apt-get -qq -y install libssl1.0.0 curl libsodium23 \
+    && ldconfig \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install erlang (Ubuntu 18+)
-RUN apt-get install -y erlang
+# Aeternity app won't run as root for security reasons
+RUN useradd --shell /bin/bash $USERNAME \
+    && chown -R $USERNAME:$USERNAME /home/$USERNAME
 
-# Install libsodium (Ubuntu 18+)
-RUN apt-get install -y libsodium-dev
+# Switch to non-root user
+USER $USERNAME
+ENV SHELL /bin/bash
 
-RUN mkdir -p /.aeternity
-WORKDIR /.aeternity
+# Create data directories in advance so that volumes can be mounted in there
+# see https://github.com/moby/moby/issues/2259 for more about this nasty hack
+RUN mkdir -p /home/$USERNAME/node/data/mnesia \
+    && mkdir -p /home/$USERNAME/node/keys
 
-# Clone Aeternity source
-RUN git clone https://github.com/aeternity/aeternity.git aeternity_source
-WORKDIR /.aeternity/aeternity_source
-RUN git checkout tags/v${VERSION}
+WORKDIR /home/$USERNAME/node
 
-# Build
-RUN make prod-build
-RUN make prod-package
-RUN tar xf _build/prod/rel/aeternity/aeternity-${VERSION}.tar.gz -C /.aeternity/
+# Erl handle SIGQUIT instead of the default SIGINT
+STOPSIGNAL SIGQUIT
 
-WORKDIR /.aeternity
-RUN rm -r aeternity_source
-RUN chown $USER:$USER /.aeternity/* -R
+EXPOSE 3013 3014 3015 3113
 
+# Should custom configuration be preferred
+# COPY ./scripts/entrypoint.sh /entrypoint.sh
+# COPY ./scripts/healthcheck.sh /healthcheck.sh
 
-# Copy confirugation file and 
-COPY config/aeternity.yaml /.aeternity/aeternity.yaml
-RUN chmod u+x aeternity.yaml
-
-# Check validity of config
-RUN bin/aeternity check_config aeternity.yaml
-
-# # Ensure we are in the correect directory
-# cd /aeternity/aeternity_source/_build/prod/rel/aeternity/
-
-# STOPSIGNAL SIGINT
-
-# COPY /scripts/start.sh /.aeternity/start.sh
-# RUN chmod u+x /.aeternity/start.sh
-
-COPY /scripts/start.sh /.aeternity/start.sh
-
-RUN chmod u+x /.aeternity/start.sh
-
-STOPSIGNAL SIGINT
-
-ADD ./scripts /usr/local/bin
-ENTRYPOINT ["entrypoint.sh"]
-CMD ["start.sh"]
-CMD [ "/.aeternity/start.sh" ]
-# ENTRYPOINT [ "start.sh" ]
+ENTRYPOINT ["/entrypoint.sh"]
+HEALTHCHECK --timeout=3s CMD /healthcheck.sh

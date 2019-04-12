@@ -1,10 +1,16 @@
-version: '2'
+version: '3'
 
 services:
   aeternity:
     container_name: aeternity
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     # environment:
     #   - DATA_DIR=/.aeternity
-    # env_file: env
+    env_file: env
     restart: unless-stopped
+#     volumes:
+#       - /docker-aeternity:"${DATA_DIR}"
+# volumes:
+#   docker-aeternity:
