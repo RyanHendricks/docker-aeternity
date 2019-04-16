@@ -1,9 +1,9 @@
 FROM aeternity/builder as builder
 
-# This Dockerfile is was created by modifying the original
-# from the aeternity github repository in order to alter
-# the build process from `clone build deploy` to
-# `build clone deploy`
+# This Dockerfile is a modified version of the original
+# from the aeternity github repository. The intention is
+# to alter the build process from `clone -> build -> deploy`
+# to `build -> clone-during-build -> deploy`
 
 # Down load source
 RUN mkdir /tmp/app/
